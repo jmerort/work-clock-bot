@@ -1,5 +1,5 @@
 """
-Bot de Telegram para ayudarme a fichar.
+Work Clock bot launch client 
 
 @jmerort
 Sep 2025
@@ -11,14 +11,19 @@ from datetime import datetime
 from data.credentials import bot_token
 
 global TOKEN
-TOKEN = bot_token # Almacenado en archivo .py local
+TOKEN = bot_token # Stored in local .py file
 
-# Diccionario para guardar los tiempos de cada fichaje
+global working, eating
+
+working = False
+eating = False
+
+# Dictionary to store the four clock times
 times = {
-    'trabajo_ini' : None,
-    'trabajo_fin' : None,
-    'comida_ini' : None,
-    'comida_fin' : None,
+    'begin' : None,
+    'lunch_begin' : None,
+    'lunch_end' : None,
+    'end' : None,
 }
 
 async def trabajo_ini(update, context):
@@ -84,11 +89,15 @@ def diferencia_tiempos(hora_ini, hora_fin):
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
 
+    # Set working and eating flags to False
+    working = False
+    eating = False
+
     # command handlers
-    app.add_handler(CommandHandler("trabajo_ini", trabajo_ini))
-    app.add_handler(CommandHandler("comida_ini", comida_ini))
-    app.add_handler(CommandHandler("comida_fin", comida_fin))
-    app.add_handler(CommandHandler("trabajo_fin", trabajo_fin))
+    app.add_handler(CommandHandler("begin", begin))
+    app.add_handler(CommandHandler("lunch_begin", comida_ini))
+    app.add_handler(CommandHandler("lunch_end", comida_fin))
+    app.add_handler(CommandHandler("end", end))
 
     app.run_polling()
 
