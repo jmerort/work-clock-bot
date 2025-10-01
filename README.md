@@ -16,3 +16,13 @@ Functions:
     -start_lunch: store the lunch time begin and set `Eating=True` if `Working=True`, else throw error.
     -end_lunch: store the lunch time and set `Eating=False` end if `Working=True` and `Eating=True` else throw error. 
     -end: store the end work time and set `Working=False` and print the time spent at work today if `Working=True` and `Eating=False` else throw error.
+
+## Version 0.2
+- The Bot will include a `/check` command to check the time at which the user can leave work, based on a constant number of daily hours per day (same for every day).
+
+Right now it gives time left in seconds. I have to sum the seconds to the current time and output the leave time in h, mins. 
+
+# To be added
+- Option to add daily reminders to clock in and out at the chosen times.
+- Option to check the time at which to leave (based on const `daily_hours` values).
+- `/help` command to see available commands.

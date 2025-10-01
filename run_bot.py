@@ -13,11 +13,12 @@ from data.credentials import bot_token
 global TOKEN
 TOKEN = bot_token # Stored in local .py file
 
-global working, eating
+global working, eating, eaten, daily_goal
 
 working = False
 eating = False
 eaten = False
+daily_goal = 8 # Number of hours user is supposed to work per day
 
 # Dictionary to store the four clock times
 times = {
@@ -43,7 +44,7 @@ async def begin(update, context):
 
 
 async def lunch_begin(update, context):
-    global working, eating
+    global working, eating, eaten
     # save current time as start time
     if working == False:
         await update.message.reply_text(f"You haven't yet clocked in.")
@@ -54,6 +55,7 @@ async def lunch_begin(update, context):
             f"Lunch begin: {times['lunch_begin'].strftime('%H:%M')}"
         )
         eating = True
+        eaten = False
 
 
 async def lunch_end(update, context):
@@ -74,7 +76,6 @@ async def lunch_end(update, context):
 
 async def end(update, context):
     global working, eating
-    times['end'] = datetime.now()
     # Check if user hasn't clocked in
     if working == False:
         # Error, can't clock out
@@ -86,9 +87,9 @@ async def end(update, context):
         await update.message.reply_text("You haven't finished lunch.")
         return
     else:
-        end_time = datetime.now()
+        times['end'] = datetime.now()
         await update.message.reply_text(
-            f"Work end: {end_time.strftime('%H:%M')}\n",
+            f"Work end: {times['end'].strftime('%H:%M')}\n",
         )
         # Print total hours and minutes worked
         if eaten:
@@ -105,7 +106,61 @@ async def end(update, context):
             hours_worked = work_s//3600
             minutes_worked = (work_s - hours_worked*3600)//60
             await update.message.reply_text(f"Total time worked: {hours_worked} h {minutes_worked} m.")
+        
+        # Reset all flags
         working = False
+        eating = False
+        eaten = False
+        return
+    
+
+async def check(update, context):
+    """
+    Print the time at which you're supposed to leave to fulfill the work hours
+    """
+    global daily_goal
+    
+    if not working: # BUG the program doesn't ever get here for some reason
+        await update.message.reply_text(f"You are not currently working.")
+        return
+    if eaten:
+        # tiempo = (hora salida - hora inicio) - (comida_fin - comida_inicio)
+        total_s = diferencia_tiempos(times['begin'], datetime.now())
+        lunch_s = diferencia_tiempos(times['lunch_begin'], times['lunch_end'])
+        work_s = total_s - lunch_s
+
+        seconds_left = daily_goal * 3600 - work_s
+        if seconds_left > 0:
+            await update.message.reply_text(f"Seconds left working: {seconds_left}.")
+        else:
+            await update.message.reply_text(f"You can leave already.")
+        return
+    elif eating: # If eating
+        work_s = diferencia_tiempos(times['begin'],times['lunch_begin'])
+
+        seconds_left = daily_goal * 3600 - work_s
+        if seconds_left > 0:
+            await update.message.reply_text(f"Seconds left working: {seconds_left}.")
+        else:
+            await update.message.reply_text(f"You can leave already.")
+        return
+    else: # If not yet eaten
+        work_s = diferencia_tiempos(times['begin'], datetime.now())
+
+        seconds_left = daily_goal * 3600 - work_s
+        if seconds_left > 0:
+            await update.message.reply_text(f"Seconds left working: {seconds_left}.")
+        else:
+            await update.message.reply_text(f"You can leave already.")
+        return
+        
+
+
+
+        
+
+
+
 
 
 def diferencia_tiempos(hora_ini, hora_fin):
@@ -129,6 +184,8 @@ def main():
     app.add_handler(CommandHandler("lunch_begin", lunch_begin))
     app.add_handler(CommandHandler("lunch_end", lunch_end))
     app.add_handler(CommandHandler("end", end))
+    app.add_handler(CommandHandler("check", check))
+
 
     app.run_polling()
 
