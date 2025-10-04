@@ -20,9 +20,8 @@ Functions:
 ## Version 0.2
 - The Bot will include a `/check` command to check the time at which the user can leave work, based on a constant number of daily hours per day (same for every day).
 
-Right now it gives time left in seconds. I have to sum the seconds to the current time and output the leave time in h, mins. 
 
 # To be added
 - Option to add daily reminders to clock in and out at the chosen times.
-- Option to check the time at which to leave (based on const `daily_hours` values).
 - `/help` command to see available commands.
+- Weekly track of time worked every day.
