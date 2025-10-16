@@ -12,17 +12,17 @@ import logging
 
 from datetime import datetime, timedelta
 
-from data.credentials import bot_token
+from data.credentials import bot_token, goal_hours
 
 global TOKEN
 TOKEN = bot_token # Stored in local .py file
 
-global working, eating, eaten, daily_goal
+global working, eating, eaten, daily_goals
 
 working = False
 eating = False
 eaten = False
-daily_goal = 8 # Number of hours user is supposed to work per day
+daily_goals = goal_hours # Number of hours user is supposed to work per week day, stored in credentials.py file
 
 # Dictionary to store the four clock times
 times = {
@@ -128,21 +128,22 @@ async def check(update, context):
     """
     Print the time at which you're supposed to leave to fulfill the work hours
     """
-    global daily_goal
+    global daily_goals
     
     if not working: # BUG the program doesn't ever get here for some reason
         await update.message.reply_text(f"You are not currently working.")
         return
     
     current_time = datetime.now()
-    print(f"current_time = {current_time}")
+    weekday = datetime.today().weekday() # Dia de la semana de 0 a 6
+    print(f"Weekday = {weekday}")
 
     if eaten:
         # tiempo = (hora salida - hora inicio) - (comida_fin - comida_inicio)
         total_s = diferencia_tiempos(times['begin'], current_time)
         lunch_s = diferencia_tiempos(times['lunch_begin'], times['lunch_end'])
         worked_s = total_s - lunch_s
-        seconds_left = daily_goal * 3600 - worked_s
+        seconds_left = int(daily_goals[weekday] * 3600 - worked_s)
         if seconds_left > 0:
             leave_time = sum_seconds(current_time, seconds_left)
             await update.message.reply_text(f"You can leave at {leave_time.strftime('%H:%M')}.")
@@ -152,7 +153,7 @@ async def check(update, context):
     elif eating: # If eating
         worked_s = diferencia_tiempos(times['begin'],times['lunch_begin'])
 
-        seconds_left = daily_goal * 3600 - worked_s
+        seconds_left = int(daily_goals[weekday] * 3600 - worked_s)
         if seconds_left > 0:
             leave_time = sum_seconds(current_time, seconds_left)
             await update.message.reply_text(f"You can leave at {leave_time.strftime('%H:%M')}.")
@@ -162,7 +163,7 @@ async def check(update, context):
     else: # If not yet eaten
         worked_s = diferencia_tiempos(times['begin'], current_time)
 
-        seconds_left = daily_goal * 3600 - worked_s
+        seconds_left = int(daily_goals[weekday] * 3600 - worked_s)
         print(f"Segundos restantes = {seconds_left}")
         if seconds_left > 0:
             leave_time = sum_seconds(current_time, seconds_left)

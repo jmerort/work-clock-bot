@@ -12,7 +12,7 @@ This Telegram bot will serve as your personal work time assistant, tracking the 
 - When leaving work, the bot will tell you how much time you spend (h, min) at work that day.
 - The Bot will respond properly to invalid commands (clocking out before having clocked in and so on).
 
-Functions:
+Added functions:
     -begin: store the current begin time and set state to `Working=True`
     -start_lunch: store the lunch time begin and set `Eating=True` if `Working=True`, else throw error.
     -end_lunch: store the lunch time and set `Eating=False` end if `Working=True` and `Eating=True` else throw error. 
@@ -20,25 +20,24 @@ Functions:
 
 ## Version 0.2
 - The Bot will include a `/check` command to check the time at which the user can leave work, based on a constant number of daily hours per day (same for every day).
-BUG : The time to leave work seems to stay always the same for some reason.
+
+Added functions:
+    -check: See the time at which you can leave work and accomplish the minimum goal hours.
 
 ## Version 0.3
-- The bot will know which day of the week it is and save the extra time from monday to Friday.
-
+- The bot will allow multiple goal hours depending on the day of the week (edit in `data/credentials.py` file).
 
 # To be added
 - Option to add daily reminders to clock in and out at the chosen times.
 - `/help` command to see available commands.
 - Weekly track of time worked every day.
-- Multiple goal hours per weekday (for example, less hours on fridays).
-
 
 # How to install and use the bot
 1) Clone this repo
-2) In the data/credentials.py file, change the `bot_token` variable to match yours (if you don't have one yet, check this guide: [From BotFather to 'Hello World'](https://core.telegram.org/bots/tutorial)).
+2) In the data/credentials.py file, change the `bot_token` variable to match yours (if you don't have one yet, check this guide: [From BotFather to 'Hello World'](https://core.telegram.org/bots/tutorial)) and choose your goal working hours for each week day (Monday to Sunday) e.g. `[8, 8, 8, 8, 8, 0, 0]` for a 9 to 5.
 3) Run `run_bot.py` and talk to your telegram bot using the following commands:
     - `/begin` : Clock in. Begin work day and start counting time.
     - `/lunch_begin` : Begin lunch break. Stop counting time until lunch is over.
     - `/lunch_end` : End lunch break and resume counting time.
     - `/end` : End work day and print how much time you spent working.
-    - `/check` : Check at which time you can leave work, based on the number of hours needed (8 by default). 
+    - `/check` : Check at which time you can leave work, based on the number of hours needed (8 by default).
