@@ -4,6 +4,7 @@ ___
 
 This Telegram bot will serve as your personal work time assistant, tracking the time you spend at work, including possible breaks, and tell you at which time you're supposed to clock out. It will also track the under- and over-time you spend at work, making it easier for you to manage your work week and keep track of how much time you spend each day.
 
+
 # Progress
 
 ## Version 0.1
@@ -19,9 +20,25 @@ Functions:
 
 ## Version 0.2
 - The Bot will include a `/check` command to check the time at which the user can leave work, based on a constant number of daily hours per day (same for every day).
+BUG : The time to leave work seems to stay always the same for some reason.
+
+## Version 0.3
+- The bot will know which day of the week it is and save the extra time from monday to Friday.
 
 
 # To be added
 - Option to add daily reminders to clock in and out at the chosen times.
 - `/help` command to see available commands.
 - Weekly track of time worked every day.
+- Multiple goal hours per weekday (for example, less hours on fridays).
+
+
+# How to install and use the bot
+1) Clone this repo
+2) In the data/credentials.py file, change the `bot_token` variable to match yours (if you don't have one yet, check this guide: [From BotFather to 'Hello World'](https://core.telegram.org/bots/tutorial)).
+3) Run `run_bot.py` and talk to your telegram bot using the following commands:
+    - `/begin` : Clock in. Begin work day and start counting time.
+    - `/lunch_begin` : Begin lunch break. Stop counting time until lunch is over.
+    - `/lunch_end` : End lunch break and resume counting time.
+    - `/end` : End work day and print how much time you spent working.
+    - `/check` : Check at which time you can leave work, based on the number of hours needed (8 by default). 

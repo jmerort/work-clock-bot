@@ -6,6 +6,10 @@ Sep 2025
 """
 
 from telegram.ext import ApplicationBuilder, CommandHandler
+from telegram.error import TimedOut, NetworkError
+import asyncio
+import logging
+
 from datetime import datetime, timedelta
 
 from data.credentials import bot_token
@@ -131,40 +135,51 @@ async def check(update, context):
         return
     
     current_time = datetime.now()
+    print(f"current_time = {current_time}")
+
     if eaten:
         # tiempo = (hora salida - hora inicio) - (comida_fin - comida_inicio)
         total_s = diferencia_tiempos(times['begin'], current_time)
         lunch_s = diferencia_tiempos(times['lunch_begin'], times['lunch_end'])
-        work_s = total_s - lunch_s
-
-        seconds_left = daily_goal * 3600 - work_s
+        worked_s = total_s - lunch_s
+        seconds_left = daily_goal * 3600 - worked_s
         if seconds_left > 0:
             leave_time = sum_seconds(current_time, seconds_left)
-            await update.message.reply_text(f"You can leave at {leave_time.hour}:{leave_time.minute}.")
+            await update.message.reply_text(f"You can leave at {leave_time.strftime('%H:%M')}.")
         else:
             await update.message.reply_text(f"You can leave already.")
         return
     elif eating: # If eating
-        work_s = diferencia_tiempos(times['begin'],times['lunch_begin'])
+        worked_s = diferencia_tiempos(times['begin'],times['lunch_begin'])
 
-        seconds_left = daily_goal * 3600 - work_s
+        seconds_left = daily_goal * 3600 - worked_s
         if seconds_left > 0:
             leave_time = sum_seconds(current_time, seconds_left)
-            await update.message.reply_text(f"You can leave at {leave_time.hour}:{leave_time.minute}.")
+            await update.message.reply_text(f"You can leave at {leave_time.strftime('%H:%M')}.")
         else:
             await update.message.reply_text(f"You can leave already.")
         return
     else: # If not yet eaten
-        work_s = diferencia_tiempos(times['begin'], current_time)
+        worked_s = diferencia_tiempos(times['begin'], current_time)
 
-        seconds_left = daily_goal * 3600 - work_s
+        seconds_left = daily_goal * 3600 - worked_s
+        print(f"Segundos restantes = {seconds_left}")
         if seconds_left > 0:
             leave_time = sum_seconds(current_time, seconds_left)
-            await update.message.reply_text(f"You can leave at {leave_time.hour}:{leave_time.minute}.")
+            print(f"Hora de salida = {leave_time}")
+            await update.message.reply_text(f"You can leave at {leave_time.strftime('%H:%M')}.")
         else:
             await update.message.reply_text(f"You can leave already.")
         return
         
+
+# Error handler
+async def error_handler(update, context):
+    logging.error("Error while handling update:", exc_info=context.error)
+    if isinstance(context.error, TimedOut):
+        logging.warning("Telegram API timed out.")
+    elif isinstance(context.error, NetworkError):
+        logging.warning("Network problem, will retry automatically.")
 
 
 
@@ -176,9 +191,13 @@ def sum_seconds(time, added_seconds):
     current_s = time.hour * 3600 + time.minute * 60 + time.second
     final_s = current_s + added_seconds
 
-    h = final_s // 3600
-    m = (final_s - h * 3600) // 60
-    s = (final_s - h * 3600 - m * 60)
+    h_total = final_s // 3600
+    h = h_total
+    if h_total > 23:
+        h = h_total - 24
+    m = (final_s - h_total * 3600) // 60
+    s = (final_s - h_total * 3600 - m * 60)
+
 
     final_time = datetime(
         year=1,
@@ -191,8 +210,6 @@ def sum_seconds(time, added_seconds):
     
     return final_time
 
-        
-
 
 
 def diferencia_tiempos(hora_ini, hora_fin):
@@ -203,8 +220,15 @@ def diferencia_tiempos(hora_ini, hora_fin):
     return int((hora_fin - hora_ini).total_seconds())
 
 
+
 def main():
-    app = ApplicationBuilder().token(TOKEN).build()
+    app = (
+        ApplicationBuilder()
+        .token(TOKEN)
+        .connect_timeout(20)
+        .read_timeout(20)
+        .build()
+    )
 
     # Set working and eating flags to False
     working = False
@@ -217,9 +241,11 @@ def main():
     app.add_handler(CommandHandler("lunch_end", lunch_end))
     app.add_handler(CommandHandler("end", end))
     app.add_handler(CommandHandler("check", check))
+    
+    app.add_error_handler(error_handler)
 
 
     app.run_polling()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
